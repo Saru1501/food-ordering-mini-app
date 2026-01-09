@@ -8,10 +8,8 @@ if (Platform.OS === "web") {
   require("./app/global.css");
 }
 */
-import { Platform } from "react-native";
-if (Platform.OS === "web") {
-  require("./global.css");
-}
+import "./global.css";
+
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
