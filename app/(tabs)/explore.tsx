@@ -116,7 +116,7 @@ import { View, Text } from "react-native";
 export default function Explore() {
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text className="text-xl font-bold text-red-700">Explore Screen</Text>
+      <Text className="text-xl font-bold text-red-100">Explore Screen</Text>
     </View>
   );
 }
