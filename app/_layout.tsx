@@ -4,12 +4,12 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { useFonts } from 'expo-font';
 import { useEffect} from "react";
-
-/*import { Platform } from "react-native";
+/*
+import { Platform } from "react-native";
 if (Platform.OS === "web") {
   require("./app/global.css");
-}
-*/
+}*/
+
 import "./global.css";
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
