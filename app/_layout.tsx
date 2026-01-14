@@ -1,24 +1,29 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import {SplashScreen, Stack} from "expo-router";
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
 import { useFonts } from 'expo-font';
 import { useEffect} from "react";
-/*
-import { Platform } from "react-native";
-if (Platform.OS === "web") {
-  require("./app/global.css");
-}*/
+//import { create } from 'zustand';
+//import './globals.css';
+import * as Sentry from '@sentry/react-native';
+import useAuthStore from "@/store/auth.store";
 
-import "./global.css";
-import { useColorScheme } from '@/hooks/use-color-scheme';
+Sentry.init({
+  dsn: 'https://94edd17ee98a307f2d85d750574c454a@o4506876178464768.ingest.us.sentry.io/4509588544094208',
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  // Configure Session Replay
+  replaysSessionSampleRate: 1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
+
+export default Sentry.wrap(function RootLayout() {
+  const { isLoading, fetchAuthenticatedUser } = useAuthStore();
 
   const [fontsLoaded, error] = useFonts({
     "QuickSand-Bold": require('../assets/fonts/Quicksand-Bold.ttf'),
@@ -28,20 +33,18 @@ export default function RootLayout() {
     "QuickSand-Light": require('../assets/fonts/Quicksand-Light.ttf'),
   });
 
-   useEffect(() => {
+  useEffect(() => {
     if(error) throw error;
     if(fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded, error]);
 
-  
-  /*return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );*/
+  useEffect(() => {
+    fetchAuthenticatedUser()
+  }, []);
+
+  if(!fontsLoaded || isLoading) return null;
+
   return <Stack screenOptions={{ headerShown: false }} />;
-}
+});
+
+//Sentry.showFeedbackWidget();

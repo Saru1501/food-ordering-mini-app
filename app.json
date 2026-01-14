@@ -39,7 +39,17 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+           "url": "https://sentry.io/",
+        "project": "react-native",
+        "organization": "sliit-0y"
+        }
       ]
+
+      
     ],
     "experiments": {
       "typedRoutes": true,
@@ -47,3 +57,5 @@
     }
   }
 }
+
+
