@@ -1,82 +1,77 @@
-import {View, Text, Button, Alert} from 'react-native'
-import {Redirect, Slot} from "expo-router";
-import {Link, router} from "expo-router";
-import React from 'react'
-import CustomInput from "@/components/CustomInput";
-import CustomButton from "@/components/CustomButton";
-import {useState} from "react";
-import { createUser } from '@/lib/appwrite';
-//import {signIn} from "@/lib/appwrite";
-//import * as Sentry from '@sentry/react-native'
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { useState } from "react";
+import useAuthStore from "@/store/auth.store";
 
-const SignUp = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+export default function SignUp() {
+  const [name, setName] = useState("Guest User");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-   const submit = async () => {
-         const { name, email, password } = form;
+  const { setIsAuthenticated, setUser } = useAuthStore();
 
-         if(!name || !email || !password) return Alert.alert('Error', 'Please enter valid email address & password.');
-
-        setIsSubmitting(true)
-
-        try {
-            //await signIn({ email, password });
-            await createUser({ email,  password,  name });
-            // Alert.alert('Success', 'You have successfully signed up.');
-            router.replace('/');
-        } catch(error: any) {
-            Alert.alert('Error', error.message);
-           // Sentry.captureEvent(error);
-        } finally {
-            setIsSubmitting(false);
-        }
+  const handleSignUp = () => {
+    // ✅ frontend-only: simple validation
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Missing details", "Please enter email and password.");
+      return;
     }
 
+    // ✅ mock login success
+    setUser({ name: name.trim() || "Guest User" } as any);
+    setIsAuthenticated(true);
+
+    // go to home (tabs)
+    router.replace("/");
+  };
+
   return (
-    <View className="gap-10 bg-white rounded-lg p-5 mt-5">
-          
-          <CustomInput
-                placeholder="Enter your full name"
-                value={form.name}
-                onChangeText={(text) => setForm((prev) => ({ ...prev, name: text }))}
-                label="Full name"
-            />
-      
-          <CustomInput
-                    placeholder='Enter your email'
-                    value={form.email}
-                    onChangeText={(text) => setForm((prev) => ({ ...prev, email: text }))}
-                    label="email"
-                    keyboardType="email-address"
-                    />
-          
-          <CustomInput
-                    placeholder='Enter your password'
-                    value={form.password}
-                    onChangeText={(text) => setForm((prev) => ({ ...prev, password: text }))}
-                    label="Password"
-                    secureTextEntry={true}
-                    />
-         
+    <SafeAreaView className="bg-white h-full px-5">
+      <View className="mt-8">
+        <Text className="text-2xl font-bold">Create Account</Text>
+        <Text className="text-gray-500 mt-2">Frontend demo (no backend)</Text>
 
-          <CustomButton
-                title="Sign Up"
-                isLoading={isSubmitting}
-                onPress={submit}
-            />
+        <Text className="mt-6 font-semibold">Name</Text>
+        <TextInput
+          value={name}
+          onChangeText={setName}
+          className="border border-gray-300 rounded-xl px-4 py-3 mt-2"
+          placeholder="Your name"
+        />
 
-           <View className="flex justify-center mt-5 flex-row gap-2">
-                <Text className="base-regular text-gray-100">
-                     Already have an account?
-                </Text>
-                <Link href="/sign-up" className="base-bold text-primary">
-                    Sign In
-                </Link>
-           </View>  
+        <Text className="mt-4 font-semibold">Email</Text>
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          className="border border-gray-300 rounded-xl px-4 py-3 mt-2"
+          placeholder="example@gmail.com"
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
 
-    </View>
-  )
+        <Text className="mt-4 font-semibold">Password</Text>
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          className="border border-gray-300 rounded-xl px-4 py-3 mt-2"
+          placeholder="********"
+          secureTextEntry
+        />
+
+        <TouchableOpacity
+          className="bg-black rounded-xl py-4 mt-8"
+          onPress={handleSignUp}
+        >
+          <Text className="text-white text-center font-bold">Sign Up</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity className="mt-5" onPress={() => router.push("/sign-in")}>
+          <Text className="text-center text-gray-600">
+            Already have an account? <Text className="font-bold">Sign in</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
 }
-
-export default SignUp

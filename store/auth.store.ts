@@ -1,45 +1,32 @@
-import { create } from 'zustand';
-import {User} from "@/type";
-import {getCurrentUser} from "@/lib/appwrite";
+import { create } from "zustand";
+import { User } from "@/type";
 
 type AuthState = {
-    isAuthenticated: boolean;
-    user: User | null;
-    isLoading: boolean;
+  isAuthenticated: boolean;
+  user: User | null;
+  isLoading: boolean;
 
-    setIsAuthenticated: (value: boolean) => void;
-    setUser: (user: User | null) => void;
-    setLoading: (loading: boolean) => void;
+  setIsAuthenticated: (value: boolean) => void;
+  setUser: (user: User | null) => void;
+  setLoading: (loading: boolean) => void;
 
-    fetchAuthenticatedUser: () => Promise<void>;
-}
+  fetchAuthenticatedUser: () => Promise<void>;
+};
 
 const useAuthStore = create<AuthState>((set) => ({
-    isAuthenticated: false,
-    user: null,
-    isLoading: true,
+  // ✅ frontend demo: always logged in
+  isAuthenticated: true,
+  user: { name: "Guest User" } as User,
+  isLoading: false,
 
-    setIsAuthenticated: (value) => set({ isAuthenticated: value }),
-    setUser: (user) => set({ user }),
-    setLoading: (value) => set({isLoading: value}),
+  setIsAuthenticated: (value) => set({ isAuthenticated: value }),
+  setUser: (user) => set({ user }),
+  setLoading: (isLoading) => set({ isLoading }),
 
-    fetchAuthenticatedUser: async () => {
-        set({isLoading: true});
-
-        try {
-            const user = await getCurrentUser();
-
-            if(user && typeof user.name === 'string' && typeof user.email === 'string' && typeof user.avatar === 'string') 
-                set({ isAuthenticated: true, user: user as unknown as User });
-            else 
-                set( { isAuthenticated: false, user: null } );
-        } catch (e) {
-            console.log('fetchAuthenticatedUser error', e);
-            set({ isAuthenticated: false, user: null })
-        } finally {
-            set({ isLoading: false });
-        }
-    }
-}))
+  fetchAuthenticatedUser: async () => {
+    // no backend — just keep default user
+    set({ isAuthenticated: true, user: { name: "Guest User" } as User, isLoading: false });
+  },
+}));
 
 export default useAuthStore;

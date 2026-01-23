@@ -1,67 +1,64 @@
-import {FlatList, View, Text } from 'react-native'
-import React from 'react'
-import {SafeAreaView} from "react-native-safe-area-context";
-import useAppwrite from "@/lib/useAppwrite";
-import {getCategories, getMenu} from "@/lib/appwrite";
-import {useLocalSearchParams} from "expo-router";
-import {useEffect} from "react";
+import { FlatList, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams } from "expo-router";
 import CartButton from "@/components/CartButton";
 import cn from "clsx";
 import MenuCard from "@/components/MenuCard";
-import {Category, MenuItem} from "@/type";
-import * as Sentry from "@sentry/react-native";
 import Filter from "@/components/Filter";
 import SearchBar from "@/components/SearchBar";
+import dummyData from "@/lib/data";
+import { useMemo } from "react";
 
 const Search = () => {
-    const { category, query } = useLocalSearchParams<{query: string; category: string}>()
+  const { category, query } = useLocalSearchParams<{ query: string; category: string }>();
 
-    const { data, refetch, loading } = useAppwrite({ fn: getMenu, params: { category,  query,  limit: 6, } });
-    const { data: categories } = useAppwrite({ fn: getCategories });
+  const categories = dummyData.categories.map((c) => c.name);
 
-    useEffect(() => {
-        refetch({ category, query, limit: 6})
-    }, [category, query]);
+  const data = useMemo(() => {
+    let items = dummyData.menu;
 
-    return (
-        <SafeAreaView className="bg-white h-full">
-            <FlatList
-                data={data}
-                renderItem={({ item, index }) => {
-                    const isFirstRightColItem = index % 2 === 0;
+    if (category) items = items.filter((i) => i.category_name === category);
+    if (query) items = items.filter((i) => i.name.toLowerCase().includes(query.toLowerCase()));
 
-                    return (
-                        <View className={cn("flex-1 max-w-[48%]", !isFirstRightColItem ? 'mt-10': 'mt-0')}>
-                            <MenuCard item={item as unknown as MenuItem}/>
-                        </View>
-                    )
-                }}
-                keyExtractor={item => item.$id}
-                numColumns={2}
-                columnWrapperClassName="gap-7"
-                contentContainerClassName="gap-7 px-5 pb-32"
-                ListHeaderComponent={() => (
-                    <View className="my-5 gap-5">
-                        <View className="flex-between flex-row w-full">
-                            <View className="flex-start">
-                                <Text className="small-bold uppercase text-primary">Search</Text>
-                                <View className="flex-start flex-row gap-x-1 mt-0.5">
-                                    <Text className="paragraph-semibold text-dark-100">Find your favorite food</Text>
-                                </View>
-                            </View>
+    return items;
+  }, [category, query]);
 
-                            <CartButton />
-                        </View>
+  return (
+    <SafeAreaView className="bg-white h-full">
+      <FlatList
+        data={data}
+        keyExtractor={(item) => item.name}
+        numColumns={2}
+        columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
+        contentContainerStyle={{ paddingBottom: 24, paddingTop: 10 }}
+        renderItem={({ item, index }) => {
+          const isLeft = index % 2 === 0;
+          return (
+            <View className={cn("flex-1", !isLeft ? "mt-10" : "mt-0")}>
+              <MenuCard item={item as any} />
+            </View>
+          );
+        }}
+        ListHeaderComponent={
+          <View className="px-4">
+            <View className="flex-row items-center justify-between mt-2">
+              <Text className="text-xl font-bold">Search</Text>
+              <CartButton />
+            </View>
 
-                        <SearchBar />
+            <SearchBar />
 
-                        <Filter categories={(categories as unknown as Category[]) || []} />
-                    </View>
-                )}
-                ListEmptyComponent={() => !loading && <Text>No results</Text>}
-            />
-        </SafeAreaView>
-    )
-}
+            <Filter categories={categories as any} />
+          </View>
+        }
+        ListEmptyComponent={
+          <View className="px-4 mt-10">
+            <Text className="text-center text-gray-500">No items found</Text>
+          </View>
+        }
+      />
+    </SafeAreaView>
+  );
+};
 
-export default Search
+export default Search;

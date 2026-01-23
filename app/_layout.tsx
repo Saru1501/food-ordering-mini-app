@@ -1,50 +1,60 @@
-import {SplashScreen, Stack} from "expo-router";
-import { useFonts } from 'expo-font';
-import { useEffect} from "react";
-//import { create } from 'zustand';
-//import './globals.css';
-import * as Sentry from '@sentry/react-native';
+import { SplashScreen, Slot, useRouter, useSegments } from "expo-router";
+import { useFonts } from "expo-font";
+import { useEffect, useRef } from "react";
 import useAuthStore from "@/store/auth.store";
 
-Sentry.init({
-  dsn: 'https://94edd17ee98a307f2d85d750574c454a@o4506876178464768.ingest.us.sentry.io/4509588544094208',
+// Prevent splash auto hide until fonts/auth ready
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
-  // Adds more context data to events (IP address, cookies, user, etc.)
-  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
-  sendDefaultPii: true,
+export default function RootLayout() {
+  const router = useRouter();
+  const segments = useSegments();
 
-  // Configure Session Replay
-  replaysSessionSampleRate: 1,
-  replaysOnErrorSampleRate: 1,
-  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const fetchAuthenticatedUser = useAuthStore((s) => s.fetchAuthenticatedUser);
 
-  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
-  // spotlight: __DEV__,
-});
+  const didRun = useRef(false);
 
-export default Sentry.wrap(function RootLayout() {
-  const { isLoading, fetchAuthenticatedUser } = useAuthStore();
-
-  const [fontsLoaded, error] = useFonts({
-    "QuickSand-Bold": require('../assets/fonts/Quicksand-Bold.ttf'),
-    "QuickSand-Medium": require('../assets/fonts/Quicksand-Medium.ttf'),
-    "QuickSand-Regular": require('../assets/fonts/Quicksand-Regular.ttf'),
-    "QuickSand-SemiBold": require('../assets/fonts/Quicksand-SemiBold.ttf'),
-    "QuickSand-Light": require('../assets/fonts/Quicksand-Light.ttf'),
+  const [fontsLoaded, fontError] = useFonts({
+    "QuickSand-Bold": require("../assets/fonts/Quicksand-Bold.ttf"),
+    "QuickSand-Medium": require("../assets/fonts/Quicksand-Medium.ttf"),
+    "QuickSand-Regular": require("../assets/fonts/Quicksand-Regular.ttf"),
+    "QuickSand-SemiBold": require("../assets/fonts/Quicksand-SemiBold.ttf"),
+    "QuickSand-Light": require("../assets/fonts/Quicksand-Light.ttf"),
   });
 
   useEffect(() => {
-    if(error) throw error;
-    if(fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded, error]);
+    if (fontError) throw fontError;
+  }, [fontError]);
 
+  // fetch auth once
   useEffect(() => {
-    fetchAuthenticatedUser()
-  }, []);
+    if (didRun.current) return;
+    didRun.current = true;
+    fetchAuthenticatedUser();
+  }, [fetchAuthenticatedUser]);
 
-  if(!fontsLoaded || isLoading) return null;
+  // routing
+  useEffect(() => {
+    if (!fontsLoaded) return;
+    if (isLoading) return;
 
-  return <Stack screenOptions={{ headerShown: false }} />;
-});
+    const inAuthGroup = segments[0] === "(auth)";
+    const inTabsGroup = segments[0] === "(tabs)";
 
-//Sentry.showFeedbackWidget();
+    if (!isAuthenticated && !inAuthGroup) {
+      router.replace("/(auth)/sign-in");
+    }
+
+    if (isAuthenticated && !inTabsGroup) {
+      router.replace("/(tabs)");
+    }
+
+    SplashScreen.hideAsync().catch(() => {});
+  }, [fontsLoaded, isLoading, isAuthenticated, segments, router]);
+
+  if (!fontsLoaded || isLoading) return null;
+
+  return <Slot />;
+}
