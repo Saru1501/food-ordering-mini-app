@@ -8,6 +8,8 @@ import Filter from "@/components/Filter";
 import SearchBar from "@/components/SearchBar";
 import dummyData from "@/lib/data";
 import { useMemo } from "react";
+import { getCategories, getMenu } from "@/lib/mockApi";
+
 
 const Search = () => {
   const { category, query } = useLocalSearchParams<{ query: string; category: string }>();
